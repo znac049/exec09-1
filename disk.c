@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include "6809.h"
+#include "6x09.h"
 #include "eon.h"
 
 /* The disk drive is emulated as follows:

@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "machine.h"
-#include "6809.h"
+#include "6x09.h"
 #include "imux.h"
 #include "timer.h"
 

@@ -24,7 +24,7 @@
 #include "machine.h"
 #include "command.h"
 #include "monitor.h"
-#include "6809.h"
+#include "6x09.h"
 #include "eon.h"
 
 #define CONFIG_LEGACY

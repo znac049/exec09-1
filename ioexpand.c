@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include "machine.h"
 #include "ioexpand.h"
-#include "6809.h"
+#include "6x09.h"
 
 
 /* An I/O expander subdivides a single, 128-byte region into 16, 8-byte slots each

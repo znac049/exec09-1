@@ -1,7 +1,7 @@
 #include <fcntl.h>
 #include <assert.h>
 #include "machine.h"
-#include "6809.h"
+#include "6x09.h"
 #include "ioexpand.h"
 #include "command.h"
 

@@ -23,7 +23,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <limits.h>
-#include "6809.h"
+#include "6x09.h"
 #include "command.h"
 #include "symtab.h"
 #include "machine.h"

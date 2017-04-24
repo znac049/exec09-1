@@ -1,4 +1,4 @@
-#include "6809.h"
+#include "6x09.h"
 
 void
 path_init (struct pathlist *path)

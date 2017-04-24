@@ -17,7 +17,7 @@
 #define PROMPT_CYCLES 0x2
 #define PROMPT_INSN 0x4
 
-#include "6809.h"
+#include "6x09.h"
 
 struct cpu_regs {
 	unsigned X, Y, S, U, PC;

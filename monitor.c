@@ -21,7 +21,7 @@
 
 #include <ctype.h>
 #include <signal.h>
-#include "6809.h"
+#include "6x09.h"
 #include "monitor.h"
 #include "command.h"
 #include "os9syscalls.h"

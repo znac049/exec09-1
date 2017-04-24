@@ -1,6 +1,6 @@
 /* -*- c-file-style: "ellemtel"  -*- */
 
-#include "6809.h"
+#include "6x09.h"
 #include "monitor.h"
 #include "machine.h"
 #include "symtab.h"

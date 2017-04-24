@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "6809.h"
+#include "6x09.h"
 #include "monitor.h"
 #include "command.h"
 #include <stdarg.h>
