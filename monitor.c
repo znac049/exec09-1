@@ -43,6 +43,9 @@ enum addr_mode
 {
   _illegal, _implied, _imm_byte, _imm_word, _direct, _extended,
   _indexed, _rel_byte, _rel_word, _reg_post, _sys_post, _usr_post
+#ifdef H6309
+  _imm_direct, _imm_quad, _reg_reg, _single_bit, _blk_move
+#endif
 };
 
 enum opcode
@@ -64,7 +67,15 @@ enum opcode
   _swi2, _swi3, _sync, _tfr, _tsta, _tstb, _tst, _reset,
 #ifdef H6309
   _negd, _comd, _lsrd, _rord, _asrd, _rold, _decd, _incd, _tstd,
-  _clrd
+  _clrd, _oim, _aim, _eim, _addr, _lde, _ldf, _ldw, _dece, _ince, 
+  _tste, _clre, _decf, _incf, _tstf, _clrf, _come, _comf, 
+  _ldq, _stq, _sexw, _tim, _pshsw, _pshuw, _pulsw, _puluw,
+  _ste, _stf, _adcr, _subr, _sbcr, _andr, _orr, _eorr, _cmpr,
+  _asld, _comw, _lsrw, _rorw, _rolw, _decw, _incw, _tstw, _clrw,
+  _subw, _cmpw, _sbcd, _andd, _bitd, _eord, _adcd, _ord, _addw,
+  _band, _biand, _bor, _bior, _beor, _bieor, _ldbt, _stbt, _stw,
+  _tfm, _bitmd, _ldmd, _sube, _cmpe, _adde, _subf, _cmpf, _addf,
+  _divd, _divq, _muld
 #endif
 };
 
@@ -86,7 +97,15 @@ char *mne[] = {
   "SWI2", "SWI3", "SYNC", "TFR", "TSTA", "TSTB", "TST", "RESET",
 #ifdef H6309
   "NEGD", "COMD", "LSRD", "RORD", "ASRD", "ROLD", "DECD",
-  "INCD", "TSTD", "CLRD",
+  "INCD", "TSTD", "CLRD", "OIM", "AIM", "EIM", "ADDR", "LDE", "LDF", 
+  "LDW", "DECE", "INCE", "TSTE", "CLRE", "DECF", "INCF", "TSTF", "CLRF",
+  "COME", "COMF", "LDQ", "STQ", "SEXW", "TIM", "PSHSW", "PSHUW", "PULSW",
+  "PULUW", "STE", "STF", "ADCR", "SUBR", "SBCR", "ANDR", "ORR", "EORR",
+  "CMPR", "ASLD", "COMW", "LSRW", "RORW", "ROLW", "DECW", "INCW", "TSTW",
+  "CLRW", "SUBW", "CMPW", "SBCD", "ANDD", "BITD", "EORD", "ADCD", "ORD",
+  "ADDW", "BAND", "BIAND", "BOR", "BIOR", "BEOR", "BIEOR", "LDBT", "STBT",
+  "STW", "TFM", "BITMD", "LDMD", "SUBE", "CMPE", "ADDE", "SUBF", "CMPF", 
+  "ADDF", "DIVD", "DIVQ", "MULD"
 #endif
 };
 
