@@ -2520,8 +2520,20 @@ int cpu_execute (int cycles)
 	  break;		/* NEG direct */
 #ifdef H6309
 	case 0x01:		/* OIM */
+	  {
+	    unsigned immval = imm_byte();
+	    direct();
+	    cpu_clk -= 4;
+	    oim(immval, ea);
+	  }
 	  break;
 	case 0x02:		/* AIM */
+	  {
+	    unsigned immval = imm_byte();
+	    direct();
+	    cpu_clk -= 4;
+	    aim(immval, ea);
+	  }
 	  break;
 #endif
 	case 0x03:
@@ -2536,6 +2548,12 @@ int cpu_execute (int cycles)
 	  break;		/* LSR direct */
 #ifdef H6309
 	case 0x05:		/* EIM */
+	  {
+	    unsigned immval = imm_byte();
+	    direct();
+	    cpu_clk -= 4;
+	    eim(immval, ea);
+	  }
 	  break;
 #endif
 	case 0x06:
@@ -2565,6 +2583,12 @@ int cpu_execute (int cycles)
 	  break;		/* DEC direct */
 #ifdef H6309
 	case 0x0B:		/* TIM */
+	  {
+	    unsigned immval = imm_byte();
+	    direct();
+	    cpu_clk -= 4;
+	    tim(immval, ea);
+	  }
 	  break;
 #endif
 	case 0x0c:
@@ -2643,28 +2667,40 @@ int cpu_execute (int cycles)
 		break;
 #ifdef H6309
 	      case 0x30:	/* ADDR */
+		addr();
 		break;
 	      case 0x31:	/* ADCR */
+		adcr();
 		break;
 	      case 0x32:	/* SUBR */
+		subr();
 		break;
 	      case 0x33:	/* SBCR */
+		sbcr();
 		break;
 	      case 0x34:	/* ANDR */
+		andr();
 		break;
 	      case 0x35:	/* ORR */
+		orr();
 		break;
 	      case 0x36:	/* EORR */
+		eorr();
 		break;
 	      case 0x37:	/* CMPR */
+		cmpr();
 		break;
 	      case 0x38:	/* PSHSW */
+                pshsw();
 		break;
 	      case 0x39:	/* PULSW */
+                pulsw();
 		break;
 	      case 0x3a:	/* PSHUW */
+                pshuw();
 		break;
 	      case 0x3b:	/* PULUW */
+                puluw();
 		break;
 #endif
 	      case 0x3f:
@@ -2672,48 +2708,70 @@ int cpu_execute (int cycles)
 		break;
 #ifdef H6309
 	      case 0x40:	/* NEGD */
+		set_d(neg16(get_d()));
 		break;
 	      case 0x43:	/* COMD */
+		set_d(com16(get_d()));
 		break;
 	      case 0x44:	/* LSRD */
+                set_d(lsr(get_d()));
 		break;
 	      case 0x46:	/* RORD */
+                set_d(ror16(get_d()));
 		break;
 	      case 0x47:	/* ASRD */
+		set_d(asr16(get_d()));
 		break;
 	      case 0x48:	/* ASLD/LSLD */
+		set_d(asl16(get_d()));
 		break;
 	      case 0x49:	/* ROLD */
+                set_d(rol16(get_d()));
 		break;
 	      case 0x4a:	/* DECD */
+                set_d(dec16(get_d()));
 		break;
 	      case 0x4c:	/* INCD */
+                set_d(inc16(get_d()));
 		break;
 	      case 0x4d:	/* TSTD */
+                tst16(get_d());
 		break;
 	      case 0x4f:	/* CLRD */
+                set_d(clr16());
 		break;
 	      case 0x53:	/* COMW */
+		set_w(com16(get_w()));
 		break;
 	      case 0x54:	/* LSRW */
+                set_w(lsr(get_w()));
 		break;
 	      case 0x56:	/* ??RORW */
+                set_w(ror16(get_w()));
 		break;
 	      case 0x59:	/* ROLW */
+                set_w(rol16(get_w()));
 		break;
 	      case 0x5a:	/* DECW */
+                set_w(dec16(get_w()));
 		break;
 	      case 0x5c:	/* INCW */
+                set_w(inc16(get_w()));
 		break;
 	      case 0x5d:	/* TSTW */
+                tst16(get_w());
 		break;
 	      case 0x5f:	/* CLRW */
+                set_w(clr16());
 		break;
 	      case 0x80:	/* SUBW */
+                set_w(sub16(get_w(), imm_word()));
 		break;
 	      case 0x81:	/* CMPW */
+                cmp16(get_w(), imm_word());
 		break;
 	      case 0x82:	/* SBCD */
+		set_d(sbc16(get_d(), imm_word()));
 		break;
 #endif
 	      case 0x83:
@@ -2722,18 +2780,29 @@ int cpu_execute (int cycles)
 		break;
 #ifdef H6309
 	      case 0x84:	/* ANDD */
+                set_d(and16(get_d(), imm_word()));
 		break;
 	      case 0x85:	/* BITD */
+		cpu_clk -= 4;
+		bit16(get_d(), imm_word());
 		break;
 	      case 0x86:	/* LDW */
+		cpu_clk -= 3;
+		ldw(imm_word());
 		break;
 	      case 0x88:	/* EORD */
+		cpu_clk -= 5;
+		set_d(eor(get_d(), imm_word()));
 		break;
 	      case 0x89:	/* ADCD */
+		cpu_clk -= 5;
+		set_d(adc16(get_d(), imm_word()));
 		break;
 	      case 0x8a:	/* ORD */
+		set_d(or(get_d(), imm_word()));
 		break;
 	      case 0x8b:	/* ADDW */
+		set_w(add16(get_w(), imm_word()));
 		break;
 #endif
 	      case 0x8c:
@@ -2746,10 +2815,19 @@ int cpu_execute (int cycles)
 		break;
 #ifdef H6309
 	      case 0x90:	/* SUBW */
+		direct();
+		cpu_clk -= 5;
+		set_w(sub16(get_w(), RDMEM16(ea)));
 		break;
 	      case 0x91:	/* CMPW */
+		direct();
+		cpu_clk -= 5;
+		cmp16(get_w(), RDMEM16(ea));
 		break;
 	      case 0x92:	/* SBCD */
+		direct();
+		cpu_clk -= 5;
+		set_d(sbc16(get_d(), RDMEM16(ea)));
 		break;
 #endif
 	      case 0x93:
@@ -2758,6 +2836,48 @@ int cpu_execute (int cycles)
 		cmp16 (get_d (), RDMEM16 (ea));
 		cpu_clk--;
 		break;
+#ifdef H6309
+	      case 0x94:	/* ANDD */
+		direct();
+		cpu_clk -= 5;
+		set_d(and16(get_d(), RDMEM16(ea)));
+		break;
+	      case 0x95:	/* BITD */
+		direct();
+		cpu_clk -= 5;
+		bit16(get_d(), RDMEM16(ea));
+		break;
+	      case 0x96:	/* LDW */
+		direct();
+		cpu_clk -= 5;
+		ldw(RDMEM16(ea));
+		break;
+              case 0x97:	/* STW */
+                direct();
+                cpu_clk -= 5;
+                st16(get_w());
+		break;
+	      case 0x98:	/* EORD */
+		direct();
+		cpu_clk -= 5;
+		set_d(eor(get_d(), RDMEM16(ea)));
+		break;
+	      case 0x99:	/* ADCD */
+		direct();
+		cpu_clk -= 5;
+		set_d(adc16(get_d(), RDMEM16(ea)));
+		break;
+	      case 0x9a:	/* ORD */
+		direct();
+		cpu_clk -= 5;
+		set_d(or(get_d(), RDMEM16(ea)));
+		break;
+	      case 0x9b:	/* ADDW */
+		direct();
+		cpu_clk -= 5;
+		set_w(add16(get_w(), RDMEM16(ea)));
+		break;
+#endif
 	      case 0x9c:
 		direct ();
 		cpu_clk -= 5;
@@ -2774,12 +2894,71 @@ int cpu_execute (int cycles)
 		cpu_clk -= 5;
 		st16 (Y);
 		break;
+#ifdef H6309
+	      case 0xa0:	/* SUBW */
+		indexed();
+		cpu_clk -= 6;
+		set_w(sub16(get_w(), RDMEM16(ea)));
+		break;
+	      case 0xa1:	/* CMPW */
+		indexed();
+		cpu_clk -= 6;
+		sub16(get_w(), RDMEM16(ea));
+		break;
+	      case 0xa2:	/* SBCD */
+		indexed();
+		cpu_clk -= 6;
+		set_d(sub16(get_d(), RDMEM16(ea)));
+		break;
+#endif
 	      case 0xa3:
 		cpu_clk--;
 		indexed ();
 		cmp16 (get_d (), RDMEM16 (ea));
 		cpu_clk--;
 		break;
+#ifdef H6309
+	      case 0xa4:	/* ANDD */
+		indexed();
+		cpu_clk -= 6;
+		set_d(and16(get_d(), RDMEM16(ea)));
+		break;
+	      case 0xa5:	/* BITD */
+		indexed();
+		cpu_clk -= 6;
+		bit16(get_d(), RDMEM16(ea));
+		break;
+	      case 0xa6:	/* LDW */
+		indexed();
+		cpu_clk -= 6;
+		ldw(RDMEM16(ea));
+		break;
+	      case 0xa7:	/* STW */
+		indexed();
+		cpu_clk -= 6;
+		st16(get_w());
+		break;
+	      case 0xa8:	/* EORD */
+		indexed();
+		cpu_clk -= 6;
+		set_d(eor(get_d(), RDMEM16(ea)));
+		break;
+	      case 0xa9:	/* ADCD */
+		indexed();
+		cpu_clk -= 6;
+		set_d(adc16(get_d(), RDMEM16(ea)));
+		break;
+	      case 0xaa:	/* ORD */
+		indexed();
+		cpu_clk -= 6;
+		set_d(or(get_d(), RDMEM16(ea)));
+		break;
+	      case 0xab:	/* ADDW */
+		indexed();
+		cpu_clk -= 6;
+		set_w(add16(get_w(), RDMEM16(ea)));
+		break;
+#endif
 	      case 0xac:
 		cpu_clk--;
 		indexed ();
@@ -2796,12 +2975,71 @@ int cpu_execute (int cycles)
 		indexed ();
 		st16 (Y);
 		break;
+#ifdef H6309
+	      case 0xb0:	/* SUBW */
+		cpu_clk -= 6;
+		extended();
+		set_w(sub16(get_w(), RDMEM16(ea)));
+		break;
+	      case 0xb1:	/* CMPW */
+		cpu_clk -= 6;
+		extended();
+		cmp16(get_w(), RDMEM16(ea));
+		break;
+	      case 0xb2:	/* SBCD */
+		cpu_clk -= 6;
+		extended();
+		set_d(sbc16(get_d(), RDMEM16(ea)));
+		break;
+#endif
 	      case 0xb3:
 		extended ();
 		cpu_clk -= 6;
 		cmp16 (get_d (), RDMEM16 (ea));
 		cpu_clk--;
 		break;
+#ifdef H6309
+	      case 0xb4:	/* ANDD */
+		cpu_clk -= 6;
+		extended();
+		set_d(and16(get_d(), RDMEM16(ea)));
+		break;
+	      case 0xb5:	/* BITD */
+		cpu_clk -= 6;
+		extended();
+		bit16(get_d(), RDMEM16(ea));
+		break;
+	      case 0xb6:	/* LDW */
+		cpu_clk -= 6;
+		extended();
+		ldw(RDMEM16(ea));
+		break;
+	      case 0xb7:	/* STW */
+		cpu_clk -= 6;
+		extended();
+		st16(get_w());
+		break;
+	      case 0xb8:	/* EORD */
+		cpu_clk -= 6;
+		extended();
+		set_d(eor(get_d(), RDMEM16(ea)));
+		break;
+	      case 0xb9:	/* ADCD */
+		cpu_clk -= 6;
+		extended();
+		set_d(adc16(get_d(), RDMEM16(ea)));
+		break;
+	      case 0xba:	/* ORD */
+		cpu_clk -= 6;
+		extended();
+		set_d(or(get_d(), RDMEM16(ea)));
+		break;
+	      case 0xbb:	/* ADDW */
+		cpu_clk -= 6;
+		extended();
+		set_d(add16(get_d(), RDMEM16(ea)));
+		break;
+#endif
 	      case 0xbc:
 		extended ();
 		cpu_clk -= 6;
@@ -2822,6 +3060,18 @@ int cpu_execute (int cycles)
 		cpu_clk -= 4;
 		S = ld16 (imm_word ());
 		break;
+#ifdef H6309
+	      case 0xdc:	/* LDQ */
+		direct();
+		cpu_clk -= 7;
+		ldq(RDMEM16(ea), RDMEM16(ea+2));
+		break;
+	      case 0xdd:	/* STQ */
+		direct();
+		cpu_clk -= 7;
+		stq();
+		break;
+#endif
 	      case 0xde:
 		direct ();
 		cpu_clk -= 5;
@@ -2832,6 +3082,18 @@ int cpu_execute (int cycles)
 		cpu_clk -= 5;
 		st16 (S);
 		break;
+#ifdef H6309
+	      case 0xec:	/* LDQ */
+		cpu_clk -= 8;
+		indexed();
+		ldq(RDMEM16(ea), RDMEM16(ea+2));
+		break;
+	      case 0xed:	/* STQ */
+		cpu_clk -= 8;
+		indexed();
+		stq();
+		break;
+#endif
 	      case 0xee:
 		cpu_clk--;
 		indexed ();
@@ -2842,6 +3104,18 @@ int cpu_execute (int cycles)
 		indexed ();
 		st16 (S);
 		break;
+#ifdef H6309
+	      case 0xfc:	/* LDQ */
+		extended();
+		cpu_clk -= 8;
+		ldq(RDMEM16(ea), RDMEM16(ea+2));
+		break;
+	      case 0xfd:	/* STQ */
+		extended();
+		cpu_clk -= 8;
+		stq();
+		break;
+#endif
 	      case 0xfe:
 		extended ();
 		cpu_clk -= 6;
@@ -2865,31 +3139,136 @@ int cpu_execute (int cycles)
 
 	    switch (opcode)
 	      {
+#ifdef H6309
+	      case 0x30: /* BAND */
+		band(NO_INV);
+		break;
+	      case 0x31: /* BIAND */
+		band(INV);
+		break;
+	      case 0x32: /* BOR */
+		bor(NO_INV);
+		break;
+	      case 0x33: /* BIOR */
+		bor(INV);
+		break;
+	      case 0x34: /* BEOR */
+		beor(NO_INV);
+		break;
+	      case 0x35: /* BIEOR */
+		beor(INV);
+		break;
+	      case 0x36: /* LDBT */
+                ldbt();
+		break;
+	      case 0x37: /* STBT */
+		stbt();
+		break;
+	      case 0x38: /* TFM */
+		tfm_inc();
+		break;
+	      case 0x39: /* TFM */
+		tfm_dec();
+		break;
+	      case 0x3a: /* TFM */
+		tfm_inc_src();
+		break;
+	      case 0x3b: /* TFM */
+		tfm_inc_dst();
+		break;
+	      case 0x3c: /* BITMD */
+		bit(MD, imm_byte());
+		break;
+	      case 0x3d: /* LDMD */
+		cpu_clk -= 5;
+		MD = imm_byte();
+		break;
+#endif
 	      case 0x3f:
 		swi3 ();
 		break;
 #ifdef H6309
-			case 0x80: /* SUBE */
-			case 0x81: /* CMPE */
+	      case 0x43: /* CCME */
+		E = com(E);
+		break;
+	      case 0x4a: /* DECE */
+		E = dec(E);
+		break;
+	      case 0x4c: /* INCE */
+		E = inc(E);
+		break;
+	      case 0x4d: /* TSTE */
+		tst(E);
+		break;
+	      case 0x4f: /* CLRE */
+		E = clr(E);
+		break;
+	      case 0x53: /* COMF */
+		F = com(F);
+		break;
+	      case 0x5a: /* DECF */
+		F = dec(F);
+		break;
+	      case 0x5c: /* INCF */
+		F = inc(F);
+		break;
+	      case 0x5d: /* TSTF */
+		tst(F);
+		break;
+	      case 0x5f: /* CLRF */
+		F = clr(F);
+		break;
+	      case 0x80: /* SUBE */
+		cpu_clk -= 3;
+		E = sub(E, imm_byte());
+		break;
+	      case 0x81: /* CMPE */
+		cpu_clk -= 3;
+		cmp(E, imm_byte());
+		break;
 #endif
 	      case 0x83:
 		cpu_clk -= 5;
 		cmp16 (U, imm_word ());
 		break;
 #ifdef H6309
-			case 0x86: /* LDE */
-			case 0x8B: /* ADDE */
+	      case 0x86: /* LDE */
+		cpu_clk -= 2;
+		E = ld (imm_byte ());
+		break;
+	      case 0x8b: /* ADDE */
+		cpu_clk -= 3;
+		E = add(E, imm_byte());
+		break;
 #endif
 	      case 0x8c:
 		cpu_clk -= 5;
 		cmp16 (S, imm_word ());
 		break;
 #ifdef H6309
-			case 0x8D: /* DIVD */
-			case 0x8E: /* DIVQ */
-			case 0x8F: /* MULD */
-			case 0x90: /* SUBE */
-			case 0x91: /* CMPE */
+	      case 0x8d: /* DIVD */
+		cpu_clk -= 25;
+		divd(imm_byte());
+		break;
+	      case 0x8e: /* DIVQ */
+		cpu_clk -= 34;
+		divq(imm_word());
+		break;
+	      case 0x8f: /* MULD */
+		cpu_clk -= 28;
+		muld(imm_word());
+		break;
+
+	      case 0x90: /* SUBE */
+		direct();
+		cpu_clk -= 4;
+		E = sub(E, RDMEM(ea));
+		break;
+	      case 0x91: /* CMPE */
+		direct();
+		cpu_clk -= 4;
+		cmp(E, RDMEM(ea));
+		break;
 #endif
 	      case 0x93:
 		direct ();
@@ -2897,36 +3276,245 @@ int cpu_execute (int cycles)
 		cmp16 (U, RDMEM16 (ea));
 		cpu_clk--;
 		break;
+#ifdef H6309
+	      case 0x96: /* LDE */
+		direct ();
+		cpu_clk -= 4;
+		E = ld (RDMEM (ea));
+		break;
+	      case 0x97: /* STE */
+		direct ();
+		cpu_clk -= 4;
+		st(E);
+		break;
+	      case 0x9b: /* ADDE */
+		direct();
+		cpu_clk -= 4;
+		E = add(E, RDMEM(ea));
+		break;
+#endif
 	      case 0x9c:
 		direct ();
 		cpu_clk -= 5;
 		cmp16 (S, RDMEM16 (ea));
 		cpu_clk--;
 		break;
+#ifdef H6309
+	      case 0x9d: /* DIVD */
+		direct();
+		cpu_clk -= 26;
+		divd(RDMEM(ea));
+		break;
+	      case 0x9e: /* DIVQ */
+		direct();
+		cpu_clk -= 35;
+		divq(RDMEM16(ea));
+		break;
+	      case 0x9f: /* MULD */
+		direct();
+		cpu_clk -= 29;
+		muld(RDMEM16(ea));
+		break;
+	      case 0xa0: /* SUBE */
+		indexed();
+		cpu_clk -= 5;
+		E = sub(E, RDMEM(ea));
+		break;
+	      case 0xa1: /* CMPE */
+		indexed();
+		cpu_clk -= 5;
+		cmp(E, RDMEM(ea));
+		break;
+#endif
 	      case 0xa3:
 		cpu_clk--;
 		indexed ();
 		cmp16 (U, RDMEM16 (ea));
 		cpu_clk--;
 		break;
+#ifdef H6309
+	      case 0xa6: /* LDE */
+		indexed ();
+		E = ld (RDMEM (ea));
+		break;
+	      case 0xa7: /* STE */
+		indexed ();
+		st (E);
+		break;
+	      case 0xab: /* ADDE */
+		indexed();
+		cpu_clk -= 5;
+		E = add(E, RDMEM(ea));
+		break;
+#endif
 	      case 0xac:
 		cpu_clk--;
 		indexed ();
 		cmp16 (S, RDMEM16 (ea));
 		cpu_clk--;
 		break;
+#ifdef H6309
+	      case 0xad: /* DIVD */
+		indexed();
+		cpu_clk -= 27;
+		divd(RDMEM(ea));
+		break;
+	      case 0xae: /* DIVQ */
+		indexed();
+		cpu_clk -= 36;
+		divq(RDMEM16(ea));
+		break;
+	      case 0xaf: /* MULD */
+		indexed();
+		cpu_clk -= 30;
+		muld(RDMEM16(ea));
+		break;
+	      case 0xb0: /* SUBE */
+		extended();
+		cpu_clk -= 5;
+		E = sub(E, RDMEM(ea));
+		break;
+	      case 0xb1: /* CMPE */
+		extended();
+		cpu_clk -= 5;
+		cmp(E, RDMEM(ea));
+		break;
+#endif
 	      case 0xb3:
 		extended ();
 		cpu_clk -= 6;
 		cmp16 (U, RDMEM16 (ea));
 		cpu_clk--;
 		break;
+#ifdef H6309
+	      case 0xb6: /* LDE */
+		extended ();
+		cpu_clk -= 5;
+		E = ld (RDMEM (ea));
+		break;
+	      case 0xb7: /* STE */
+		extended();
+		cpu_clk -= 6;
+		st(E);
+		break;
+	      case 0xbb: /* ADDE */
+		extended();
+		cpu_clk -= 5;
+		E = add(E, RDMEM(ea));
+		break;
+#endif
 	      case 0xbc:
 		extended ();
 		cpu_clk -= 6;
 		cmp16 (S, RDMEM16 (ea));
 		cpu_clk--;
 		break;
+#ifdef H6309
+	      case 0xbd: /* DIVD */
+		extended();
+		cpu_clk -= 27;
+		divd(RDMEM(ea));
+		break;
+	      case 0xbe: /* DIVQ */
+		extended();
+		cpu_clk -= 36;
+		divq(RDMEM16(ea));
+		break;
+	      case 0xbf: /* MULD */
+		extended();
+		cpu_clk -= 30;
+		muld(RDMEM16(ea));
+		break;
+	      case 0xc0: /* SUBF */
+		cpu_clk -= 3;
+		F = sub(F, imm_byte());
+		break;
+	      case 0xc1: /* CMPF */
+		cpu_clk -= 3;
+		cmp(F, imm_byte());
+		break;
+	      case 0xc6: /* LDF */
+		cpu_clk -= 2;
+		F = ld(imm_byte ());
+		break;
+	      case 0xcb: /* ADDF */
+		cpu_clk -= 3;
+		F = add(F, imm_byte());
+		break;
+	      case 0xd0: /* SUBF */
+		direct();
+		cpu_clk -= 4;
+		F = sub(F, RDMEM(ea));
+		break;
+	      case 0xd1: /* CMPF */
+		direct();
+		cpu_clk -= 4;
+		cmp(F, RDMEM(ea));
+		break;
+	      case 0xd6: /* LDF */
+		direct ();
+		cpu_clk -= 4;
+		F = ld (RDMEM (ea));
+		break;
+	      case 0xd7: /* STF */
+		direct();
+		cpu_clk -= 4;
+		st(F);
+		break;
+	      case 0xdb: /* ADDF */
+		direct();
+		cpu_clk -= 4;
+		F = add(F, RDMEM(ea));
+		break;
+	      case 0xe0: /* SUBF */
+		indexed();
+		cpu_clk -= 5;
+		F = sub(F, RDMEM(ea));
+		break;
+	      case 0xe1: /* CMPF */
+		indexed();
+		cpu_clk -= 5;
+		cmp(F, RDMEM(ea));
+		break;
+	      case 0xe6: /* LDF */
+		indexed ();
+		F = ld (RDMEM (ea));
+		break;
+	      case 0xe7:
+		indexed ();
+		st (F);
+		break;
+	      case 0xeb: /* ADDF */
+		indexed();
+		cpu_clk -= 5;
+		F = add(F, RDMEM(ea));
+		break;
+	      case 0xf0: /* SUBF */
+		extended();
+		cpu_clk -= 5;
+		F = sub(F, RDMEM(ea));
+		break;
+	      case 0xf1: /* CMPF */
+		extended();
+		cpu_clk -= 5;
+		cmp(F, RDMEM(ea));
+		break;
+	      case 0xf6: /* LDF */
+		extended ();
+		cpu_clk -= 5;
+		F = ld (RDMEM (ea));
+		break;
+	      case 0xf7: /* STF */
+		extended();
+		cpu_clk -= 5;
+		st(F);
+		break;
+	      case 0xfb: /* ADDF */
+		extended();
+		cpu_clk -= 5;
+		F = add(F, RDMEM(ea));
+		break;
+#endif
 	      default:
 	        sim_error ("invalid opcode (2) at %s\n", monitor_addr_name (iPC));
 		break;
@@ -2942,6 +3530,7 @@ int cpu_execute (int cycles)
 	  break;
 #ifdef H6309
 	case 0x14:		/* SEXW */
+	  sexw();
 	  break;
 #endif
 	case 0x16:
@@ -3141,8 +3730,20 @@ int cpu_execute (int cycles)
 	  break;		/* NEG indexed */
 #ifdef H6309
 	case 0x61:		/* OIM indexed */
+	  {
+	    unsigned immval = imm_byte();
+	    indexed();
+	    cpu_clk -= 5;
+	    oim(immval, ea);
+	  }
 	  break;
 	case 0x62:		/* AIM indexed */
+	  {
+	    unsigned immval = imm_byte();
+	    indexed();
+	    cpu_clk -= 5;
+	    aim(immval, ea);
+	  }
 	  break;
 #endif
 	case 0x63:
@@ -3155,6 +3756,12 @@ int cpu_execute (int cycles)
 	  break;		/* LSR indexed */
 #ifdef H6309
 	case 0x65:		/* EIM indexed */
+	  {
+	    unsigned immval = imm_byte();
+	    indexed();
+	    cpu_clk -= 4;
+	    eim(immval, ea);
+	  }
 	  break;
 #endif
 	case 0x66:
@@ -3179,6 +3786,12 @@ int cpu_execute (int cycles)
 	  break;		/* DEC indexed */
 #ifdef H6309
 	case 0x6b:		/* TIM indexed */
+	  {
+	    unsigned immval = imm_byte();
+	    tim(immval, ea);
+	    cpu_clk -= 4;
+	    eim(immval, ea);
+	  }
 	  break;
 #endif
 	case 0x6c:
@@ -3207,8 +3820,20 @@ int cpu_execute (int cycles)
 	  break;		/* NEG extended */
 #ifdef H6309
 	case 0x71:		/* OIM extended */
+	  {
+	    unsigned immval = imm_byte();
+	    extended();
+	    cpu_clk -= 4;
+	    oim(immval, ea);
+	  }
 	  break;
 	case 0x72:		/* AIM extended */
+	  {
+	    unsigned immval = imm_byte();
+	    extended();
+	    cpu_clk -= 4;
+	    aim(immval, ea);
+	  }
 	  break;
 #endif
 	case 0x73:
@@ -3223,6 +3848,12 @@ int cpu_execute (int cycles)
 	  break;		/* LSR extended */
 #ifdef H6309
 	case 0x75:		/* EIM extended */
+	  {
+	    unsigned immval = imm_byte();
+	    extended();
+	    cpu_clk -= 4;
+	    eim(immval, ea);
+	  }
 	  break;
 #endif
 	case 0x76:
@@ -3252,6 +3883,12 @@ int cpu_execute (int cycles)
 	  break;		/* DEC extended */
 #ifdef H6309
 	case 0x7b:		/* TIM indexed */
+	  {
+	    unsigned immval = imm_byte();
+	    extended();
+	    cpu_clk -= 4;
+	    tim(immval, ea);
+	  }
 	  break;
 #endif
 	case 0x7c:
@@ -3616,6 +4253,8 @@ int cpu_execute (int cycles)
 	  break;
 #ifdef H6309
 	case 0xcd:		/* LDQ immed */
+	  cpu_clk -= 5;
+	  ldq(imm_word(), imm_word());
 	  break;
 #endif
 	case 0xce:
@@ -3906,4 +4545,9 @@ void print_regs (void)
    printf ("DP: 0x%02X\n", get_dp() );
    printf (" A: 0x%02X      B: 0x%02X    [D]: 0x%04X   CC: %s\n",
             get_a(), get_b(), read16(get_d()), flags );
+
+#ifdef H6309
+   printf (" E: 0x%02X      F: 0x%02X    [W]: 0x%04X   MD: 0x%02X\n",
+            get_e(), get_f(), read16(get_w()), get_md());
+#endif
 }
