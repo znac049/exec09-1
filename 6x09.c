@@ -990,6 +990,18 @@ static void tfm_inc_dst(void) {
   Z = 1;
 }
 
+static unsigned add16(unsigned arg, unsigned val)
+{
+  unsigned res = arg + val;
+
+  C = res & 0x10000;
+  Z = res &= 0xffff;
+  N = (res & 0x8000);
+  OV = H = arg ^ val ^ res ^ C;
+
+  return res;
+}
+
 static void divd(unsigned val)
 {
   int reg = get_d();
@@ -1189,6 +1201,18 @@ static unsigned sbc16(unsigned arg, unsigned val)
   return res;
 }
 
+static unsigned sub16(unsigned arg, unsigned val)
+{
+  unsigned res = arg - val;
+
+  C = res & 0x10000;
+  Z = res &= 0xffff;
+  N = (res & 0x8000);
+  OV = (arg ^ val) & (arg ^ res);
+
+  return res;
+}
+
 static void tst16 (unsigned arg)
 {
   unsigned res = arg;
@@ -1209,6 +1233,16 @@ static void sexw (void)
     res = 0xff;
   E = res;
   cpu_clk -= 2;
+}
+
+static void ldq (unsigned hi, unsigned lo)
+{
+  Z = hi | lo;
+  A = N = hi >> 8;
+  B = hi & 0xff;
+  E = lo >> 8;
+  F = lo & 0xff;
+  OV = 0;
 }
 
 static void stq(void)
