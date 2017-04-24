@@ -87,11 +87,13 @@ long get_elapsed_realtime (void);
 /* Fetch macros */
 
 #define abs_read16(addr)   ((abs_read8(addr) << 8) | abs_read8(addr+1))
+#define abs_read32(addr)   ((abs_read8(addr) << 24) | (abs_read8(addr+1) << 16) | (abs_read8(addr+2) << 8) | abs_read8(addr+3))
 
 #define fetch8()           abs_read8 (pc++)
 #define fetch16()          (pc += 2, abs_read16(pc-2))
+#define fetch32()          (pc += 4, abs_read32(pc-4))
 
-/* 6809.c */
+/* 6x09.c */
 extern int cpu_quit;
 extern int cpu_execute (int);
 extern void cpu_reset (void);
@@ -117,6 +119,10 @@ extern void set_s  (unsigned);
 extern void set_u  (unsigned);
 extern void set_pc (unsigned);
 extern void set_d  (unsigned);
+
+/* debug.c */
+extern void set_debug(int level, const char *file);
+extern void debugf(int level, const char *fmt, ...);
 
 /* fileio.c */
 

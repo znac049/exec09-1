@@ -36,6 +36,9 @@ unsigned E, F, V, MD;
 #define MD_FIRQ_LIKE_IRQ 0x2	/* if 1, FIRQ acts like IRQ */
 #define MD_ILL 0x40		/* illegal instruction */
 #define MD_DBZ 0x80		/* divide by zero */
+
+#define NO_INV 0
+#define INV 1
 #endif /* H6309 */
 
 unsigned iPC;
@@ -733,6 +736,529 @@ void set_reg (unsigned nro, unsigned val)
 #endif
     }
 }
+
+#ifdef H6309
+static unsigned get_bit_reg(unsigned reg)
+{
+  unsigned res = 0;
+
+  switch (reg) {
+  case 0:
+    res = get_cc();
+    break;
+
+  case 1:
+    res = A;
+    break;
+
+  case 2:
+    res = B;
+    break;
+  }
+
+  return res;
+}
+
+static void set_bit_reg(unsigned reg, unsigned val)
+{
+  switch (reg) {
+  case 0:
+    set_cc(val);
+    break;
+
+  case 1:
+    A = val;
+    break;
+
+  case 2:
+    B = val;
+    break;
+  }
+}
+
+#define BITn(val, n) ((val >> n) & 1)
+
+static void band(int invert)
+{
+  unsigned regs = imm_byte();
+  unsigned reg_num = (regs >> 6) & 0x03;
+
+  unsigned reg = get_bit_reg(reg_num);
+  unsigned reg_bit_num = regs & 0x07;
+  unsigned reg_mask = ~(1<<reg_bit_num);
+  unsigned src;
+
+  unsigned bit;
+
+  direct();
+  src = RDMEM(ea);
+  if (invert) {
+    src = ~src;
+  }
+
+  bit = BITn(reg, reg_bit_num) & BITn(src, (regs >> 3) & 0x07);
+  reg = (reg & reg_mask) | (bit << reg_bit_num);
+
+  set_bit_reg(reg_num, reg);
+  cpu_clk -= 6;
+}
+
+static void bor(int invert)
+{
+  unsigned regs = imm_byte();
+  unsigned reg_num = (regs >> 6) & 0x03;
+
+  unsigned reg = get_bit_reg(reg_num);
+  unsigned reg_bit_num = regs & 0x07;
+  unsigned reg_mask = ~(1<<reg_bit_num);
+  unsigned src;
+
+  unsigned bit;
+
+  direct();
+  src = RDMEM(ea);
+  if (invert) {
+    src = ~src;
+  }
+
+  bit = BITn(reg, reg_bit_num) | BITn(src, (regs >> 3) & 0x07);
+  reg = (reg & reg_mask) | (bit << reg_bit_num);
+
+  set_bit_reg(reg_num, reg);
+  cpu_clk -= 6;
+}
+
+static void beor(int invert)
+{
+  unsigned regs = imm_byte();
+  unsigned reg_num = (regs >> 6) & 0x03;
+
+  unsigned reg = get_bit_reg(reg_num);
+  unsigned reg_bit_num = regs & 0x07;
+  unsigned reg_mask = ~(1<<reg_bit_num);
+  unsigned src;
+
+  unsigned bit;
+
+  direct();
+  src = RDMEM(ea);
+  if (invert) {
+    src = ~src;
+  }
+
+  bit = BITn(reg, reg_bit_num) ^ BITn(src, (regs >> 3) & 0x07);
+  reg = (reg & reg_mask) | (bit << reg_bit_num);
+
+  set_bit_reg(reg_num, reg);
+  cpu_clk -= 6;
+}
+
+static void ldbt(void)
+{
+  unsigned regs = imm_byte();
+  unsigned reg_num = (regs >> 6) & 0x03;
+
+  unsigned reg = get_bit_reg(reg_num);
+  unsigned reg_bit_num = regs & 0x07;
+  unsigned reg_mask = ~(1<<reg_bit_num);
+  unsigned src;
+
+  unsigned bit;
+
+  direct();
+  src = RDMEM(ea);
+
+  bit = BITn(src, (regs >> 3) & 0x07);
+  reg = (reg & reg_mask) | (bit << reg_bit_num);
+
+  set_bit_reg(reg_num, reg);
+  cpu_clk -= 6;
+}
+
+static void stbt(void)
+{
+  unsigned regs = imm_byte();
+  unsigned reg_num = (regs >> 6) & 0x03;
+
+  unsigned reg = get_bit_reg(reg_num);
+  unsigned reg_bit_num = regs & 0x07;
+
+  unsigned src;
+  unsigned src_bit_num = (regs >> 3) & 0x07;
+  unsigned src_mask = ~(1<<src_bit_num);
+
+  unsigned bit;
+
+  direct();
+  src = RDMEM(ea);
+
+  bit = BITn(src, reg_bit_num);
+  src = (src & src_mask) | (bit << src_bit_num);
+
+  WRMEM(ea, src);
+  cpu_clk -= 7;
+}
+
+static void tfm_inc(void) {
+  unsigned regs = imm_byte();
+  unsigned src_reg_num = (regs >> 4) & 0x0f;
+  unsigned dst_reg_num = regs & 0x0f;
+  unsigned src_addr = get_reg(src_reg_num);
+  unsigned dst_addr = get_reg(dst_reg_num);
+  unsigned count = get_w();
+
+  cpu_clk -= (6 + (count * 3));
+
+  while (count) {
+    unsigned val = RDMEM(src_addr);
+    WRMEM(dst_addr, val);
+
+    src_addr++;
+    dst_addr++;
+
+    count--;
+  }
+
+  set_w(0);
+  Z = 1;
+}
+
+static void tfm_dec(void) {
+  unsigned regs = imm_byte();
+  unsigned src_reg_num = (regs >> 4) & 0x0f;
+  unsigned dst_reg_num = regs & 0x0f;
+  unsigned src_addr = get_reg(src_reg_num);
+  unsigned dst_addr = get_reg(dst_reg_num);
+  unsigned count = get_w();
+
+  cpu_clk -= (6 + (count * 3));
+
+  while (count) {
+    unsigned val = RDMEM(src_addr);
+    WRMEM(dst_addr, val);
+
+    src_addr--;
+    dst_addr--;
+
+    count--;
+  }
+
+  Z = 1;
+}
+
+static void tfm_inc_src(void) {
+  unsigned regs = imm_byte();
+  unsigned src_reg_num = (regs >> 4) & 0x0f;
+  unsigned dst_reg_num = regs & 0x0f;
+  unsigned src_addr = get_reg(src_reg_num);
+  unsigned dst_addr = get_reg(dst_reg_num);
+  unsigned count = get_w();
+
+  cpu_clk -= (6 + (count * 3));
+
+  while (count) {
+    unsigned val = RDMEM(src_addr);
+    WRMEM(dst_addr, val);
+
+    src_addr++;
+
+    count--;
+  }
+
+  Z = 1;
+}
+
+static void tfm_inc_dst(void) {
+  unsigned regs = imm_byte();
+  unsigned src_reg_num = (regs >> 4) & 0x0f;
+  unsigned dst_reg_num = regs & 0x0f;
+  unsigned src_addr = get_reg(src_reg_num);
+  unsigned dst_addr = get_reg(dst_reg_num);
+  unsigned count = get_w();
+
+  cpu_clk -= (6 + (count * 3));
+
+  while (count) {
+    unsigned val = RDMEM(src_addr);
+    WRMEM(dst_addr, val);
+
+    dst_addr++;
+
+    count--;
+  }
+
+  Z = 1;
+}
+
+static void divd(unsigned val)
+{
+  int reg = get_d();
+  int quot = reg / val;
+  int rem = reg - (quot * val);
+
+  A = quot;
+  B = rem;
+
+  Z = (quot == 0);
+  C = (quot & 1);
+  N = (quot < 0);
+  OV = 0; // TODO: This is wrong
+}
+
+static void divq(unsigned val)
+{
+  int reg = get_q();
+  int quot = reg / val;
+  int rem = reg - (quot * val);
+
+  set_w(quot);
+  set_d(rem);
+
+  Z = (quot == 0);
+  C = (quot & 1);
+  N = (quot < 0);
+  OV = 0; // TODO: This is wrong
+}
+
+static void muld(int val)
+{
+  int reg = (int)get_d() * val;
+
+  set_q(reg);
+
+  Z = (reg == 0);
+  C = 0;
+  N = (reg < 0);
+}
+
+static unsigned adc16(unsigned arg, unsigned val)
+{
+  unsigned res = arg + val + (C != 0);
+
+  C = res & 0x10000;
+  Z = res &= 0xffff;
+  N = (res & 0x8000);
+  OV = H = arg ^ val ^ res ^ C;
+
+  return res;
+}
+
+static unsigned and16(unsigned arg, unsigned val)
+{
+  unsigned res = arg & val;
+
+  Z = res;
+  N = (res & 0x8000);
+  OV = 0;
+
+  return res;
+}
+
+static unsigned asl16 (unsigned arg)		/* same as lsl */
+{
+  unsigned res = arg << 1;
+
+  C = res & 0x10000;
+  Z = res &= 0xffff;
+  N = (res & 0x8000);
+  OV = arg ^ res;
+  cpu_clk -= 2;
+
+  return res;
+}
+
+static unsigned asr16 (unsigned arg)
+{
+  unsigned res = arg;
+
+  C = res & 1;
+  Z = res = (res >> 1) & 0xffff;
+  N = (res & 0x8000);
+  cpu_clk -= 2;
+
+  return res;
+}
+
+static void bit16(unsigned arg, unsigned val)
+{
+  unsigned res = arg & val;
+
+  Z = res;
+  N = res & 0x8000;
+  OV = 0;
+}
+
+static unsigned dec16 (unsigned arg)
+{
+  unsigned res = (arg - 1) & 0xffff;
+
+  Z = res;
+  N = (res & 0x8000);
+  OV = arg & ~res;
+  cpu_clk -= 2;
+
+  return res;
+}
+
+static unsigned inc16 (unsigned arg)
+{
+  unsigned res = (arg + 1) & 0xffff;
+
+  Z = res;
+  N = (res & 0x8000);
+  OV = ~arg & res;
+  cpu_clk -= 2;
+
+  return res;
+}
+
+static unsigned neg16(unsigned val)
+{
+  OV = (val == 0x8000);
+
+  val = -val;
+  
+  C = val;
+  N = (val & 0x8000);
+  Z = (val == 0);
+
+  cpu_clk -= 2;
+
+  return val;
+}
+
+static unsigned com16(unsigned val)
+{
+  val = ~val;
+  
+  C = 1;
+  N = (val & 0x8000);
+  Z = (val == 0);
+  OV = 0;
+
+  cpu_clk -= 2;
+
+  return val;
+}
+
+static unsigned clr16(void)
+{
+  C = N = OV = 0;
+  Z = 1;
+
+  cpu_clk -= 2;
+
+  return 0;
+}
+
+static unsigned rol16 (unsigned arg)
+{
+  unsigned res = (arg << 1) + (C != 0);
+
+  C = res & 0x10000;
+  Z = res &= 0xffff;
+  N = (res & 0x8000);
+  OV = arg ^ res;
+  cpu_clk -= 2;
+
+  return res;
+}
+
+static unsigned ror16 (unsigned arg)
+{
+  unsigned res = arg;
+
+  if (C != 0)
+    res |= 0x10000;
+  C = res & 1;
+  Z = res >>= 1;
+  N = (res & 0x8000);
+  cpu_clk -= 2;
+
+  return res;
+}
+
+static unsigned sbc16(unsigned arg, unsigned val)
+{
+  unsigned res = arg - val - (C != 0);
+
+  C = res & 0x10000;
+  N = Z = res &= 0xffff;
+  OV = (arg ^ val) & (arg ^ res);
+
+  return res;
+}
+
+static void tst16 (unsigned arg)
+{
+  unsigned res = arg;
+
+  Z = res;
+  N = (res & 0x8000);
+  OV = 0;
+  cpu_clk -= 2;
+}
+
+static void sexw (void)
+{
+  unsigned res = F;
+
+  Z = res;
+  N = res &= 0x80;
+  if (res != 0)
+    res = 0xff;
+  E = res;
+  cpu_clk -= 2;
+}
+
+static void stq(void)
+{
+  unsigned hi = (A << 8) | B;
+  unsigned lo = (E << 8) | F;
+
+  Z = hi | lo;
+  N = A;
+  OV = 0;
+  WRMEM16(ea, hi);
+  WRMEM16(ea+2, lo);
+}
+
+static void pshsw (void)
+{
+  cpu_clk -= 6;
+  S = (S - 1) & 0xffff;
+  write_stack(S, F);
+  S = (S - 1) & 0xffff;
+  write_stack(S, E);
+}
+
+static void pulsw(void)
+{
+  cpu_clk -= 6;
+  E = read_stack(S);
+  S = (S + 1) & 0xffff;
+  F = read_stack(S);
+  S = (S + 1) & 0xffff;
+}
+
+static void pshuw(void)
+{
+  cpu_clk -= 6;
+  U = (U - 1) & 0xffff;
+  write_stack(U, F);
+  U = (U - 1) & 0xffff;
+  write_stack(U, E);
+}
+
+static void puluw(void)
+{
+  cpu_clk -= 6;
+  E = read_stack(U);
+  U = (U + 1) & 0xffff;
+  F = read_stack(U);
+  U = (U + 1) & 0xffff;
+}
+#endif
 
 /* 8-Bit Accumulator and Memory Instructions */
 
@@ -1499,6 +2025,325 @@ void trap (void)
   stack_machine_state(1);
 
   change_pc (read16 (0xfff0));
+}
+
+static unsigned reg8to16(unsigned reg)
+{
+  switch (reg) {
+  case 8: // A
+  case 9: // B
+    reg = 0; // D
+    break;
+
+  case 14: // E
+  case 15: // F
+    reg = 6; // W
+    break;
+
+  default:
+    // TODO: Throw some kind of error as 8-bit reg has no 16-bit equivalent
+    break;
+  }
+
+  return reg;
+}
+
+static inline unsigned reg_size(unsigned reg)
+{
+  return (reg & 0x08)?8:16;
+}
+
+static void addr(void)
+{
+  unsigned regs = read8(PC);
+  unsigned r1 = ((regs & 0xf0) >> 4);
+  unsigned r2 = regs & 0x0f;
+  unsigned r1val;
+  unsigned r2val;
+  unsigned res;
+  unsigned mask = 0x80;
+
+  if ((reg_size(r2) == 16) && (reg_size(r1) == 8)) {
+    r1 = reg8to16(r1);
+
+    mask = 0x8000;
+  }
+
+  r1val = get_reg(r1);
+  r2val = get_reg(r2);
+
+  res = r1val + r2val;
+
+  C = (res >> 1) & mask;
+  N = Z = res &= mask;
+  OV = H = r1val ^ r2val ^ res ^ C;
+
+  set_reg(r2, res);
+  cpu_clk -= 4;
+}
+
+static void adcr(void)
+{
+  unsigned regs = read8(PC);
+  unsigned r1 = ((regs & 0xf0) >> 4);
+  unsigned r2 = regs & 0x0f;
+  unsigned r1val;
+  unsigned r2val;
+  unsigned res;
+  unsigned mask = 0x80;
+
+  if ((reg_size(r2) == 16) && (reg_size(r1) == 8)) {
+    r1 = reg8to16(r1);
+
+    mask = 0x8000;
+  }
+
+  r1val = get_reg(r1);
+  r2val = get_reg(r2);
+
+  res = r1val + r2val + (C != 0);
+
+  C = (res >> 1) & mask;
+  N = Z = res &= mask;
+  OV = H = r1val ^ r2val ^ res ^ C;
+
+  set_reg(r2, res);
+  cpu_clk -= 4;
+}
+
+static void subr(void)
+{
+  unsigned regs = read8(PC);
+  unsigned r1 = ((regs & 0xf0) >> 4);
+  unsigned r2 = regs & 0x0f;
+  unsigned r1val;
+  unsigned r2val;
+  unsigned res;
+  unsigned carry_mask = 0x100;
+  unsigned size_mask = 0xff;
+
+  if ((reg_size(r2) == 16) && (reg_size(r1) == 8)) {
+    r1 = reg8to16(r1);
+
+    carry_mask = 0x10000;
+    size_mask = 0xffff;
+  }
+
+  r1val = get_reg(r1);
+  r2val = get_reg(r2);
+
+  res = r2val - r1val;
+
+  C = res & carry_mask;
+  N = Z = res &= size_mask;
+  OV = H = (r1val ^ r2val) & (r1val ^ res);
+
+  set_reg(r2, res);
+  cpu_clk -= 4;
+}
+
+static void sbcr(void)
+{
+  unsigned regs = read8(PC);
+  unsigned r1 = ((regs & 0xf0) >> 4);
+  unsigned r2 = regs & 0x0f;
+  unsigned r1val;
+  unsigned r2val;
+  unsigned res;
+  unsigned carry_mask = 0x100;
+  unsigned size_mask = 0xff;
+
+  if ((reg_size(r2) == 16) && (reg_size(r1) == 8)) {
+    r1 = reg8to16(r1);
+
+    carry_mask = 0x8000;
+    size_mask = 0xffff;
+  }
+
+  r1val = get_reg(r1);
+  r2val = get_reg(r2);
+
+  res = r2val - r1val - (C != 0);
+
+  C = res & carry_mask;
+  N = Z = res &= size_mask;
+  OV = H = (r1val ^ r2val) & (r1val ^ res);
+
+  set_reg(r2, res);
+  cpu_clk -= 4;
+}
+
+static void andr(void)
+{
+  unsigned regs = read8(PC);
+  unsigned r1 = ((regs & 0xf0) >> 4);
+  unsigned r2 = regs & 0x0f;
+  unsigned r1val;
+  unsigned r2val;
+  unsigned res;
+  unsigned neg_mask = 0x80;
+
+  if ((reg_size(r2) == 16) && (reg_size(r1) == 8)) {
+    r1 = reg8to16(r1);
+
+    neg_mask = 0x8000;
+  }
+
+  r1val = get_reg(r1);
+  r2val = get_reg(r2);
+
+  res = r1val & r2val;
+
+  N = res & neg_mask;
+  Z = (res == 0);
+  OV = 0;
+
+  set_reg(r2, res);
+  cpu_clk -= 4;
+}
+
+static void orr(void)
+{
+  unsigned regs = read8(PC);
+  unsigned r1 = ((regs & 0xf0) >> 4);
+  unsigned r2 = regs & 0x0f;
+  unsigned r1val;
+  unsigned r2val;
+  unsigned res;
+  unsigned neg_mask = 0x80;
+
+  if ((reg_size(r2) == 16) && (reg_size(r1) == 8)) {
+    r1 = reg8to16(r1);
+
+    neg_mask = 0x8000;
+  }
+
+  r1val = get_reg(r1);
+  r2val = get_reg(r2);
+
+  res = r1val | r2val;
+
+  N = res & neg_mask;
+  Z = (res == 0);
+  OV = 0;
+
+  set_reg(r2, res);
+  cpu_clk -= 4;
+}
+
+static void eorr(void)
+{
+  unsigned regs = read8(PC);
+  unsigned r1 = ((regs & 0xf0) >> 4);
+  unsigned r2 = regs & 0x0f;
+  unsigned r1val;
+  unsigned r2val;
+  unsigned res;
+  unsigned neg_mask = 0x80;
+
+  if ((reg_size(r2) == 16) && (reg_size(r1) == 8)) {
+    r1 = reg8to16(r1);
+
+    neg_mask = 0x8000;
+  }
+
+  r1val = get_reg(r1);
+  r2val = get_reg(r2);
+
+  res = r1val ^ r2val;
+
+  N = res & neg_mask;
+  Z = (res == 0);
+  OV = 0;
+
+  set_reg(r2, res);
+  cpu_clk -= 4;
+}
+
+static void cmpr(void)
+{
+  unsigned regs = read8(PC);
+  unsigned r1 = ((regs & 0xf0) >> 4);
+  unsigned r2 = regs & 0x0f;
+  unsigned r1val;
+  unsigned r2val;
+  unsigned res;
+  unsigned carry_mask = 0x100;
+  unsigned size_mask = 0xff;
+
+  if ((reg_size(r2) == 16) && (reg_size(r1) == 8)) {
+    r1 = reg8to16(r1);
+
+    carry_mask = 0x10000;
+    size_mask = 0xffff;
+  }
+
+  r1val = get_reg(r1);
+  r2val = get_reg(r2);
+
+  res = r2val - r1val;
+
+  C = res & carry_mask;
+  N = Z = res &= size_mask;
+  OV = H = (r1val ^ r2val) & (r1val ^ res);
+
+  cpu_clk -= 4;
+}
+
+static void ldw(unsigned arg)
+{
+  unsigned res = arg;
+
+  Z = res;
+  E = N = res >> 8;
+  F = res & 0xff;
+  OV = 0;
+}
+
+static void tim(unsigned val, unsigned ea)
+{
+  unsigned res = val & RDMEM(ea);
+
+  Z = (res == 0);
+  N = res >> 8;
+
+  OV = 0;
+}
+
+static void oim(unsigned val, unsigned ea)
+{
+  unsigned res = val | RDMEM(ea);
+
+  WRMEM(ea, res);
+
+  Z = (res == 0);
+  N = res >> 8;
+
+  OV = 0;
+}
+
+static void aim(unsigned val, unsigned ea)
+{
+  unsigned res = val & RDMEM(ea);
+
+  WRMEM(ea, res);
+
+  Z = (res == 0);
+  N = res >> 8;
+
+  OV = 0;
+}
+
+static void eim(unsigned val, unsigned ea)
+{
+  unsigned res = val ^ RDMEM(ea);
+
+  WRMEM(ea, res);
+
+  Z = (res == 0);
+  N = res >> 8;
+
+  OV = 0;
 }
 #endif
 

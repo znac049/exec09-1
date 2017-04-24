@@ -42,7 +42,7 @@ int dump_every_insn = 0;
 enum addr_mode
 {
   _illegal, _implied, _imm_byte, _imm_word, _direct, _extended,
-  _indexed, _rel_byte, _rel_word, _reg_post, _sys_post, _usr_post
+  _indexed, _rel_byte, _rel_word, _reg_post, _sys_post, _usr_post,
 #ifdef H6309
   _imm_direct, _imm_quad, _reg_reg, _single_bit, _blk_move
 #endif
