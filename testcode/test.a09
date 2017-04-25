@@ -1,0 +1,25 @@
+	org	$800
+
+	ldq	#0
+
+	lda	#42
+	inca
+	tfr	a,b
+	incb
+	tfr	b,e
+	ince
+	tfr	e,f
+	incf
+
+	nop
+
+	ldw	#16
+	leax	src,pcr
+	leay	dst,pcr
+
+	tfm	x+,y+
+
+	nop
+	
+src	fcc	"0123456789ABCDEF"
+dst	fcc	"Overwrite me ok!"

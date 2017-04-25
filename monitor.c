@@ -1643,7 +1643,7 @@ int load_map_file (const char *name)
 	printf ("Reading symbols from '%s'...\n", map_filename);
 	for (;;)
 	{
-		fgets (buf, sizeof(buf)-1, fp);
+	        fgets (buf, sizeof(buf)-1, fp);
 		if (feof (fp))
 			break;
 
@@ -1699,6 +1699,19 @@ int load_image (const char *name)
     }
 }
 
+void skip_nl(FILE *fp)
+{
+  int c = fgetc(fp);
+
+  while (c != EOF) {
+    if (c == '\n') {
+      return;
+    }
+
+    c = fgetc(fp);
+  }
+}
+
 int load_hex (FILE *fp)
 {
   unsigned int count, addr, type, data, checksum;
@@ -1715,7 +1728,6 @@ int load_hex (FILE *fp)
 	  break;
 	}
       checksum = count + (addr >> 8) + (addr & 0xff) + type;
-
       switch (type)
 	{
 	case 0:
@@ -1734,13 +1746,12 @@ int load_hex (FILE *fp)
 
 	  checksum = (-checksum) & 0xff;
 
-          if ( (fscanf(fp, "%2x", &data) != 1) || (data != checksum) )
-	    {
-	      printf("line %d: hex record checksum missing or invalid.\n", line);
-	      done = 0;
-	      break;
-	    }
-          fscanf(fp, "%*[\r\n]"); /* skip any form of line ending */
+          if ( (fscanf(fp, "%2x", &data) != 1) || (data != checksum) ) {
+	    printf("line %d: hex record checksum missing or invalid.\n", line);
+	    done = 0;
+	    break;
+	  }
+	  skip_nl(fp);
 	  break;
 
 	case 1:
@@ -1799,13 +1810,12 @@ int load_s19(FILE *fp)
 
 	  checksum = (~checksum) & 0xff;
 
-	  if ( (fscanf (fp, "%2x", &data) != 1) || (data != checksum) )
-	    {
-	      printf ("line %d: S record checksum missing or invalid.\n", line);
-	      done = 0;
-	      break;
-	    }
-          fscanf (fp, "%*[\r\n]"); /* skip any form of line ending */
+	  if ( (fscanf (fp, "%2x", &data) != 1) || (data != checksum) ) {
+	    printf ("line %d: S record checksum missing or invalid.\n", line);
+	    done = 0;
+	    break;
+	  }
+	  skip_nl(fp);
 	  break;
 
 	case 9:
@@ -1817,10 +1827,8 @@ int load_s19(FILE *fp)
 
 	case 0:
 	case 5:
-	  {
-	    // Silently ignore these records
-	    int res = fscanf (fp, "%*[\r\n]"); /* skip any form of line ending */
-	  }
+	  // Silently ignore these records
+	  skip_nl(fp);
 	  break;
 
 	default:

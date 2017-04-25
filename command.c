@@ -1380,7 +1380,7 @@ static int print_insn_long (absolute_address_t addr)
    for (i = 0; i < size; i++)
       printf("%02X", abs_read8(addr + i));
 
-   for (i = 0; i < 4 - size; i++)
+   for (i = 0; i < 6 - size; i++)
       printf("  ");
 
    name = sym_lookup(&program_symtab, addr);
